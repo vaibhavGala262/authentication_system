@@ -1,0 +1,89 @@
+
+@app.route('/login_with_google/google')
+def google_login():
+    if not google.authorized:
+        return redirect(url_for('google.login'))
+    resp = google.get('oauth2/v2/userinfo')
+    if resp.ok:
+        session['email']= resp.json()['email']
+        flash('logged in with google ')
+        return redirect(url_for('home'))
+    flash('failed to fetch user info from google')
+    return redirect(url_for('login_with_google'))
+
+
+
+
+    https://accounts.google.com/o/oauth2/auth/oauthchooseaccount?response_type=code&client_id=157142265138-vkaou27j9hac698ldtdnqbmdcr9301dp.apps.googleusercontent.com&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Fauthorize%2Fgoogle&scope=openid%20profile%20email&state=Nu4oMCtjS8BiGCmXqJoJQ4yF6Pcj9Q&nonce=BntzrVSDdLHTS5Axyzjd&service=lso&o2v=1&ddm=1&flowName=GeneralOAuthFlow
+
+
+
+
+
+
+
+
+
+
+
+
+username = user_info['email']
+
+
+    user = User.query.filter_by(name = username ).first()
+    if not user:
+        user = User(username = username )
+        db.session.add(user)
+        db.session.commit()
+
+        session['username']= username
+        session['oauth_token']=token
+        return redirect(url_for('home'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        google = oauth.register(
+    name  = 'google' , 
+    client_id = CLIENT_ID, 
+    client_secret =CLIENT_SECRET , 
+    authorize_url='https://accounts.google.com/o/oauth2/auth' , 
+
+    server_metadata_uri = 'https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs= {'scope':'openid profile email'}
+)
+
+
+token = google.authorize_access_token()
+        userinfo_endpoint= google.server_metadata_url['userinfo_endpoint']
+    
+        resp = google.get('userinfo')
+    
+        user_info = resp.json()
+        username = user_info['email']
+
+
+        user = User.query.filter_by(name = username ).first()
+        if not user:
+            user = User(name= username )
+            db.session.add(user)
+            db.session.commit()
+
+            session['username']= username
+            session['oauth_token']=token
+        return redirect(url_for('home'))
+    except Exception as e :
+        return str(e)

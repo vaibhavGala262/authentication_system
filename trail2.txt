@@ -4,30 +4,25 @@ from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 from authlib.integrations.flask_client import OAuth
 from models import User 
-import stripe
-import re
-
-stripe.api_key = 'sk_test_tR3PYbcVNZZ796tH88S4VQ2u'
 
 from database import db
 from api_key import CLIENT_SECRET ,CLIENT_ID
-YOUR_DOMAIN= 'http://127.0.0.1:5000/'
+
 
 
 
 app = Flask(__name__ , template_folder='templates' )
-oauth = OAuth(app) # integrates app with OAuth
+oauth = OAuth(app)
 
 google = oauth.register(
     name  = 'google' , 
     client_id = CLIENT_ID, 
     client_secret =CLIENT_SECRET , 
     authorize_url='https://accounts.google.com/o/oauth2/auth' , 
-    
-    server_metadata_url = 'https://accounts.google.com/.well-known/openid-configuration', # without this doesnt work 3rd method
+
+    server_metadata = 'https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs= {'scope':'openid profile email'}
 )
-
 
 
 app.config['SECRET_KEY'] = 'supersecretkey123!'
@@ -86,7 +81,7 @@ def login():
 
 
 
-@app.route('/login/')
+@app.route('/login/google')
 
 def login_google():
 
@@ -100,49 +95,34 @@ def login_google():
     
 @app.route('/authorize/google')
 def authorize_google():
+
     try :
         token = google.authorize_access_token()
-        """
         userinfo_endpoint= google.server_metadata_url['userinfo_endpoint']
-       
-        1... metadata = requests.get("https://accounts.google.com/.well-known/openid-configuration").json()
-        userinfo_endpoint = metadata.get("userinfo_endpoint")
-        
-        2... metadata = google.load_server_metadata()  # Fetch metadata
-        userinfo_endpoint = metadata['userinfo_endpoint']  # Get userinfo endpoint
-
-        3...userinfo_endpoint= google.server_metadata['userinfo_endpoint']
-        Any method works 
-        """
-        
-        userinfo_endpoint= google.server_metadata['userinfo_endpoint']
-        resp = google.get(userinfo_endpoint) 
+    
+        resp = google.get('userinfo')
+    
         user_info = resp.json()
         username = user_info['email']
 
 
         user = User.query.filter_by(name = username ).first()
         if not user:
-            user = User(name= username , password=generate_password_hash(username) )
+            user = User(name= username )
             db.session.add(user)
             db.session.commit()
 
             session['username']= username
             session['oauth_token']=token
-        return render_template('Logged_in.html')
-    
+        return redirect(url_for('home'))
     except Exception as e :
         return str(e)
 
+        
 
-           
-    
-    
+     
 
-       
 
 
 if __name__ == '__main__' :
     app.run(host="0.0.0.0" , debug =True)
-
-
